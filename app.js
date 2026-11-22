@@ -20,6 +20,7 @@ const btnSave = document.getElementById("btnSave");
 const photoFileInput = document.getElementById("photoFileInput");
 const btnAttachPhoto = document.getElementById("btnAttachPhoto");
 const btnAttachLink = document.getElementById("btnAttachLink");
+const btnVoiceInput = document.getElementById("btnVoiceInput");
 const pendingImagesEl = document.getElementById("pendingImages");
 const linkInputWrap = document.getElementById("linkInputWrap");
 const linkInput = document.getElementById("linkInput");
@@ -629,6 +630,97 @@ btnCopyFolderText.addEventListener("click", async () => {
     closeDataModal();
   } catch {
     showToast("복사 권한을 확인해 주세요.");
+  }
+});
+
+let activeInputTarget = bodyInput;
+
+titleInput.addEventListener("focus", () => {
+  activeInputTarget = titleInput;
+});
+
+bodyInput.addEventListener("focus", () => {
+  activeInputTarget = bodyInput;
+});
+
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+let recognition = null;
+let isListening = false;
+
+function stopVoiceInput() {
+  if (recognition && isListening) {
+    recognition.stop();
+  }
+  isListening = false;
+  btnVoiceInput.classList.remove("listening");
+  btnVoiceInput.setAttribute("aria-pressed", "false");
+  btnVoiceInput.textContent = "🎤 음성 입력";
+}
+
+btnVoiceInput.addEventListener("click", () => {
+  if (!SpeechRecognition) {
+    showToast("이 브라우저에서는 삼성/구글 키보드의 마이크 버튼을 이용해 주세요!");
+    return;
+  }
+
+  if (isListening) {
+    stopVoiceInput();
+    return;
+  }
+
+  const target = activeInputTarget || bodyInput;
+  const baseText = target.value;
+  const separator = baseText && !baseText.endsWith(" ") && !baseText.endsWith("\n") ? " " : "";
+
+  recognition = new SpeechRecognition();
+  recognition.lang = "ko-KR";
+  recognition.interimResults = true;
+  recognition.continuous = true;
+
+  let finalTranscript = "";
+
+  recognition.onstart = () => {
+    isListening = true;
+    btnVoiceInput.classList.add("listening");
+    btnVoiceInput.setAttribute("aria-pressed", "true");
+    btnVoiceInput.textContent = "⏹ 듣는 중...";
+    showToast("말씀하시면 바로 글로 입력돼요!");
+  };
+
+  recognition.onresult = (event) => {
+    let interim = "";
+    finalTranscript = "";
+    for (let i = 0; i < event.results.length; i++) {
+      const t = event.results[i][0].transcript;
+      if (event.results[i].isFinal) {
+        finalTranscript += t;
+      } else {
+        interim += t;
+      }
+    }
+    const combined = (finalTranscript + interim).trim();
+    if (combined) {
+      target.value = baseText + separator + combined;
+    }
+  };
+
+  recognition.onerror = (event) => {
+    if (event.error === "not-allowed" || event.error === "service-not-allowed") {
+      showToast("브라우저 마이크 권한을 허용해 주세요.");
+    } else if (event.error !== "aborted") {
+      showToast("음성 인식을 종료했어요.");
+    }
+    stopVoiceInput();
+  };
+
+  recognition.onend = () => {
+    stopVoiceInput();
+  };
+
+  try {
+    recognition.start();
+  } catch {
+    stopVoiceInput();
   }
 });
 
