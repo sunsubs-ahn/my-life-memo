@@ -10,8 +10,12 @@ const ASSETS = [
 ];
 
 self.addEventListener("install", (event) => {
+  // cache: "reload" makes the install fetch bypass the browser HTTP cache,
+  // so a fresh deployment is not cached with stale copies (max-age=600 on Pages).
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
+    caches.open(CACHE_NAME).then((cache) =>
+      cache.addAll(ASSETS.map((url) => new Request(url, { cache: "reload" })))
+    )
   );
   self.skipWaiting();
 });
