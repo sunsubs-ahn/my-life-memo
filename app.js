@@ -35,6 +35,9 @@ const btnCopyFolderText = document.getElementById("btnCopyFolderText");
 const lightbox = document.getElementById("lightbox");
 const lightboxImg = document.getElementById("lightboxImg");
 const lightboxClose = document.getElementById("lightboxClose");
+const trashBar = document.getElementById("trashBar");
+const trashCount = document.getElementById("trashCount");
+const btnEmptyTrash = document.getElementById("btnEmptyTrash");
 const toastEl = document.getElementById("toast");
 
 function showToast(message) {
@@ -91,6 +94,16 @@ function deleteMemo(id) {
     const store = tx.objectStore(STORE_NAME);
     const req = store.delete(id);
     req.onsuccess = () => resolve();
+    req.onerror = () => reject(req.error);
+  });
+}
+
+function updateMemo(memo) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, "readwrite");
+    const store = tx.objectStore(STORE_NAME);
+    const req = store.put(memo);
+    req.onsuccess = () => resolve(req.result);
     req.onerror = () => reject(req.error);
   });
 }
@@ -197,11 +210,15 @@ async function renderFeed() {
   cachedMemos = await getAllMemos();
   const q = searchQuery.trim();
   const qLower = q.toLowerCase();
+  const isTrashView = !q && currentFolder === "휴지통";
 
   btnClearSearch.classList.toggle("hidden", !q);
 
   const filtered = cachedMemos
     .filter((item) => {
+      const inTrash = Boolean(item.deletedAt);
+      if (isTrashView) return inTrash;
+      if (inTrash) return false;
       const folderMatch = q ? true : item.folder === currentFolder;
       if (!folderMatch) return false;
       if (!q) return true;
@@ -222,14 +239,30 @@ async function renderFeed() {
     searchStatus.textContent = "";
   }
 
+  trashBar.classList.toggle("hidden", !isTrashView);
+  if (isTrashView) {
+    trashCount.textContent = `휴지통 ${filtered.length}건`;
+    btnEmptyTrash.disabled = filtered.length === 0;
+  }
+
   feedArea.innerHTML = "";
 
   if (filtered.length === 0) {
     const empty = document.createElement("div");
     empty.className = "empty-state";
     empty.innerHTML = `
-      <p class="empty-title">${q ? "검색 결과가 없어요" : `'${escapeHtml(currentFolder)}' 폴더가 비어 있어요`}</p>
-      <p class="empty-desc">아래 입력창에 제목·본문·사진·웹주소를 담아보세요.</p>
+      <p class="empty-title">${
+        q
+          ? "검색 결과가 없어요"
+          : isTrashView
+          ? "휴지통이 비어 있어요"
+          : `'${escapeHtml(currentFolder)}' 폴더가 비어 있어요`
+      }</p>
+      <p class="empty-desc">${
+        isTrashView
+          ? "삭제한 기록이 여기에 모여 언제든 복원할 수 있어요."
+          : "아래 입력창에 제목·본문·사진·웹주소를 담아보세요."
+      }</p>
     `;
     feedArea.appendChild(empty);
     return;
@@ -270,19 +303,26 @@ async function renderFeed() {
          </div>`
       : "";
 
+    const footerHtml = isTrashView
+      ? `<div class="memo-export-bar">
+           <button type="button" class="export-chip restore" data-id="${item.id}">복원</button>
+           <button type="button" class="export-chip purge" data-id="${item.id}">영구 삭제</button>
+         </div>`
+      : `<div class="memo-export-bar">
+           <button type="button" class="export-chip gmail" data-id="${item.id}">Gmail 보내기</button>
+           <button type="button" class="export-chip kakao" data-id="${item.id}">카톡 나에게 보내기</button>
+         </div>`;
+
     bubble.innerHTML = `
       <div class="memo-header">
         <span class="folder-badge" data-folder="${escapeHtml(item.folder)}">${escapeHtml(item.folder)}</span>
         <h2 class="memo-title">${highlightText(item.title || "(제목 없음)", q)}</h2>
-        <button type="button" class="memo-delete" data-id="${item.id}" aria-label="삭제">✕</button>
+        ${isTrashView ? "" : `<button type="button" class="memo-delete" data-id="${item.id}" aria-label="휴지통으로 이동">✕</button>`}
       </div>
       ${imagesHtml}
       ${item.body ? `<div class="memo-body">${highlightText(item.body, q)}</div>` : ""}
       ${linkHtml}
-      <div class="memo-export-bar">
-        <button type="button" class="export-chip gmail" data-id="${item.id}">Gmail 보내기</button>
-        <button type="button" class="export-chip kakao" data-id="${item.id}">카톡 나에게 보내기</button>
-      </div>
+      ${footerHtml}
     `;
 
     row.appendChild(timeEl);
@@ -382,7 +422,9 @@ async function handleSave() {
 
 function setActiveFolder(folder) {
   currentFolder = folder;
-  folderSelect.value = folder;
+  if (folder !== "휴지통") {
+    folderSelect.value = folder;
+  }
   tabButtons.forEach((btn) => {
     const active = btn.dataset.folder === folder;
     btn.classList.toggle("active", active);
@@ -488,9 +530,35 @@ feedArea.addEventListener("click", async (e) => {
   const delBtn = e.target.closest(".memo-delete");
   if (delBtn) {
     const id = Number(delBtn.dataset.id);
+    const item = cachedMemos.find((m) => m.id === id);
+    if (item) {
+      item.deletedAt = Date.now();
+      await updateMemo(item);
+      await renderFeed();
+      showToast("휴지통으로 옮겼어요.");
+    }
+    return;
+  }
+
+  const restoreBtn = e.target.closest(".export-chip.restore");
+  if (restoreBtn) {
+    const id = Number(restoreBtn.dataset.id);
+    const item = cachedMemos.find((m) => m.id === id);
+    if (item) {
+      delete item.deletedAt;
+      await updateMemo(item);
+      await renderFeed();
+      showToast(`'${item.folder}' 폴더로 복원했어요!`);
+    }
+    return;
+  }
+
+  const purgeBtn = e.target.closest(".export-chip.purge");
+  if (purgeBtn) {
+    const id = Number(purgeBtn.dataset.id);
     await deleteMemo(id);
     await renderFeed();
-    showToast("기록을 삭제했어요.");
+    showToast("영구 삭제했어요.");
     return;
   }
 
@@ -537,6 +605,19 @@ lightbox.addEventListener("click", (e) => {
     lightbox.classList.add("hidden");
     lightboxImg.src = "";
   }
+});
+
+btnEmptyTrash.addEventListener("click", async () => {
+  const trashItems = cachedMemos.filter((m) => Boolean(m.deletedAt));
+  if (trashItems.length === 0) return;
+  if (!window.confirm(`휴지통의 ${trashItems.length}건을 모두 영구 삭제할까요?\n삭제 후에는 복구할 수 없어요.`)) {
+    return;
+  }
+  for (const item of trashItems) {
+    await deleteMemo(item.id);
+  }
+  await renderFeed();
+  showToast("휴지통을 비웠어요.");
 });
 
 document.getElementById("btnExportMenu").addEventListener("click", openDataModal);
@@ -596,6 +677,7 @@ restoreFileInput.addEventListener("change", async (e) => {
         images: Array.isArray(item.images) ? item.images : [],
         url: item.url || "",
         createdAt: item.createdAt || Date.now(),
+        ...(item.deletedAt ? { deletedAt: item.deletedAt } : {}),
       });
       addedCount++;
     }
@@ -612,7 +694,7 @@ restoreFileInput.addEventListener("change", async (e) => {
 
 btnCopyFolderText.addEventListener("click", async () => {
   const folderItems = cachedMemos
-    .filter((m) => m.folder === currentFolder)
+    .filter((m) => !m.deletedAt && m.folder === currentFolder)
     .sort((a, b) => a.createdAt - b.createdAt);
 
   if (folderItems.length === 0) {

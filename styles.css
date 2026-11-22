@@ -20,6 +20,8 @@
   --tab-web-text: #4876a8;
   --tab-etc-bg: #fff6d6;
   --tab-etc-text: #947d3a;
+  --tab-trash-bg: #f1edf4;
+  --tab-trash-text: #7b7285;
 }
 
 * {
@@ -163,11 +165,11 @@ html, body {
   border-bottom: 1px solid #e4dcf7;
 }
 
-/* 윗줄 책갈피 탭 5개 */
+/* 윗줄 책갈피 탭 6개 (5폴더 + 휴지통) */
 .bookmark-tabs {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 6px;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 4px;
   align-items: end;
 }
 
@@ -175,10 +177,12 @@ html, body {
   position: relative;
   border: 1px solid #ebe8f2;
   border-bottom: none;
-  border-radius: 12px 12px 0 0;
+  border-radius: 11px 11px 0 0;
   height: 36px;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
+  padding: 0 2px;
+  white-space: nowrap;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -192,6 +196,7 @@ html, body {
 .tab-btn[data-folder="캡쳐"]   { background: var(--tab-capture-bg); color: var(--tab-capture-text); }
 .tab-btn[data-folder="웹주소"] { background: var(--tab-web-bg); color: var(--tab-web-text); }
 .tab-btn[data-folder="기타"]   { background: var(--tab-etc-bg); color: var(--tab-etc-text); }
+.tab-btn[data-folder="휴지통"] { background: var(--tab-trash-bg); color: var(--tab-trash-text); }
 
 .tab-btn.active {
   height: 42px;
@@ -399,6 +404,49 @@ html, body {
   background: #fffae0;
   border-color: #f2e4ac;
   color: #8a722a;
+}
+
+.export-chip.restore {
+  background: #e6f7f0;
+  border-color: #bfe8d7;
+  color: #357a60;
+}
+
+.export-chip.purge {
+  background: #ffecee;
+  border-color: #f5c9cf;
+  color: #b44a58;
+}
+
+.trash-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f6f3fa;
+  border-bottom: 1px solid #e7e1f2;
+  padding: 8px 16px;
+}
+
+.trash-count {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #6d6582;
+}
+
+.trash-empty-btn {
+  border: 1px solid #f2c6cc;
+  background: #ffecef;
+  color: #b44a58;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 5px 11px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.trash-empty-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
 }
 
 .highlight {

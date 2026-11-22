@@ -40,7 +40,7 @@
         <button type="button" id="btnClearSearch" class="search-clear hidden" aria-label="검색어 지우기">✕</button>
       </div>
 
-      <!-- 윗줄 폴더 책갈피 탭 5개 -->
+      <!-- 윗줄 폴더 책갈피 탭 5개 + 휴지통 -->
       <nav class="bookmark-tabs" role="tablist" aria-label="저장 폴더">
         <button type="button" class="tab-btn active" role="tab" aria-selected="true" data-folder="메모">
           <span class="tab-ribbon" aria-hidden="true"></span>
@@ -62,11 +62,21 @@
           <span class="tab-ribbon" aria-hidden="true"></span>
           <span>기타</span>
         </button>
+        <button type="button" class="tab-btn" role="tab" aria-selected="false" data-folder="휴지통">
+          <span class="tab-ribbon" aria-hidden="true"></span>
+          <span>휴지통</span>
+        </button>
       </nav>
     </header>
 
     <!-- 검색 상태 바 -->
     <div class="search-status hidden" id="searchStatus"></div>
+
+    <!-- 휴지통 상단 비우기 바 -->
+    <div class="trash-bar hidden" id="trashBar">
+      <span class="trash-count" id="trashCount">휴지통 0건</span>
+      <button type="button" class="trash-empty-btn" id="btnEmptyTrash">휴지통 비우기</button>
+    </div>
 
     <!-- 중앙 카카오톡 '나에게 보내기' 스타일 피드 -->
     <main class="feed-area" id="feedArea" aria-live="polite"></main>
