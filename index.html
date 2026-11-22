@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#FAF8FF" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" type="image/png" href="icon-192.png" />
+  <title>MY LIFE MEMO</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <!-- 상단 헤더 -->
+    <header class="app-header">
+      <div class="header-top">
+        <div class="brand-group">
+          <h1 class="app-title">MY LIFE MEMO</h1>
+          <span class="subtitle-pill">나만의 보관함</span>
+        </div>
+        <div class="header-actions">
+          <button type="button" class="pill-btn" id="btnExportMenu">내보내기</button>
+          <button type="button" class="icon-btn" id="btnMoreMenu" aria-label="백업 및 관리">•••</button>
+        </div>
+      </div>
+
+      <!-- 검색바 -->
+      <div class="search-wrap">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="7"></circle>
+          <line x1="16.5" y1="16.5" x2="21" y2="21"></line>
+        </svg>
+        <input
+          type="search"
+          id="searchInput"
+          class="search-input"
+          placeholder="제목, 본문, 웹주소, 폴더 검색..."
+          aria-label="메모 검색"
+        />
+        <button type="button" id="btnClearSearch" class="search-clear hidden" aria-label="검색어 지우기">✕</button>
+      </div>
+
+      <!-- 윗줄 폴더 책갈피 탭 5개 -->
+      <nav class="bookmark-tabs" role="tablist" aria-label="저장 폴더">
+        <button type="button" class="tab-btn active" role="tab" aria-selected="true" data-folder="메모">
+          <span class="tab-ribbon" aria-hidden="true"></span>
+          <span>메모</span>
+        </button>
+        <button type="button" class="tab-btn" role="tab" aria-selected="false" data-folder="사진">
+          <span class="tab-ribbon" aria-hidden="true"></span>
+          <span>사진</span>
+        </button>
+        <button type="button" class="tab-btn" role="tab" aria-selected="false" data-folder="캡쳐">
+          <span class="tab-ribbon" aria-hidden="true"></span>
+          <span>캡쳐</span>
+        </button>
+        <button type="button" class="tab-btn" role="tab" aria-selected="false" data-folder="웹주소">
+          <span class="tab-ribbon" aria-hidden="true"></span>
+          <span>웹주소</span>
+        </button>
+        <button type="button" class="tab-btn" role="tab" aria-selected="false" data-folder="기타">
+          <span class="tab-ribbon" aria-hidden="true"></span>
+          <span>기타</span>
+        </button>
+      </nav>
+    </header>
+
+    <!-- 검색 상태 바 -->
+    <div class="search-status hidden" id="searchStatus"></div>
+
+    <!-- 중앙 카카오톡 '나에게 보내기' 스타일 피드 -->
+    <main class="feed-area" id="feedArea" aria-live="polite"></main>
+
+    <!-- 하단 입력창 (제목 + 2배 넓어진 본문 + 첨부 미리보기) -->
+    <footer class="composer">
+      <!-- 첨부 이미지 미리보기 줄 -->
+      <div class="pending-images hidden" id="pendingImages"></div>
+
+      <!-- 웹링크 입력 줄 -->
+      <div class="link-input-wrap hidden" id="linkInputWrap">
+        <input
+          type="url"
+          id="linkInput"
+          class="link-input"
+          placeholder="웹주소 입력 (예: https://...)"
+          aria-label="웹주소 입력"
+        />
+        <button type="button" id="btnCloseLink" class="link-close" aria-label="웹주소 입력 닫기">✕</button>
+      </div>
+
+      <div class="composer-toolbar">
+        <label class="folder-select-wrap">
+          <span class="folder-prefix">폴더:</span>
+          <select id="folderSelect" class="folder-select" aria-label="저장할 폴더 선택">
+            <option value="메모">메모</option>
+            <option value="사진">사진</option>
+            <option value="캡쳐">캡쳐</option>
+            <option value="웹주소">웹주소</option>
+            <option value="기타">기타</option>
+          </select>
+        </label>
+        <input type="file" id="photoFileInput" accept="image/*" multiple class="hidden" />
+        <button type="button" class="tool-chip" id="btnAttachPhoto">+ 사진/캡쳐</button>
+        <button type="button" class="tool-chip" id="btnAttachLink">+ 웹링크</button>
+      </div>
+
+      <input
+        type="text"
+        id="titleInput"
+        class="title-input"
+        placeholder="제목: 예) 오늘 꼭 챙길 일"
+        maxlength="120"
+        aria-label="메모 제목"
+      />
+
+      <div class="body-row">
+        <textarea
+          id="bodyInput"
+          class="body-input"
+          placeholder="본문 내용을 입력하세요...&#10;(카카오톡 나에게 보내기처럼 바로 저장돼요)"
+          aria-label="메모 본문"
+        ></textarea>
+        <button type="button" id="btnSave" class="save-btn">저장</button>
+      </div>
+    </footer>
+  </div>
+
+  <!-- 내보내기 & 백업/복원 시트 모달 -->
+  <div class="sheet-backdrop hidden" id="dataModal" role="dialog" aria-modal="true" aria-labelledby="dataModalTitle">
+    <div class="sheet-card">
+      <div class="sheet-header">
+        <h2 id="dataModalTitle" class="sheet-title">내보내기 및 백업</h2>
+        <button type="button" id="btnCloseDataModal" class="sheet-close" aria-label="닫기">✕</button>
+      </div>
+      <p class="sheet-desc" id="dataStats">현재 저장된 기록을 불러오는 중...</p>
+      <div class="sheet-actions">
+        <button type="button" class="sheet-btn primary" id="btnBackupDownload">
+          <span>전체 데이터 백업 파일 저장 (.json)</span>
+          <small>메모·사진·캡쳐·웹주소를 파일 하나로 보관해요</small>
+        </button>
+        <button type="button" class="sheet-btn" id="btnRestoreTrigger">
+          <span>백업 파일에서 복원하기 (.json)</span>
+          <small>기존 기록을 유지하면서 백업 내용을 불러와요</small>
+        </button>
+        <input type="file" id="restoreFileInput" accept="application/json,.json" class="hidden" />
+        <button type="button" class="sheet-btn" id="btnCopyFolderText">
+          <span>현재 폴더 내용 전체 복사</span>
+          <small>카톡이나 메일에 붙여넣기 좋게 정리해 복사해요</small>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 이미지 크게 보기 모달 -->
+  <div class="lightbox hidden" id="lightbox" role="dialog" aria-modal="true" aria-label="이미지 크게 보기">
+    <button type="button" class="lightbox-close" id="lightboxClose" aria-label="닫기">✕</button>
+    <img id="lightboxImg" src="" alt="첨부 이미지" />
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="app.js"></script>
+</body>
+</html>
