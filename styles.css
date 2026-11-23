@@ -305,6 +305,28 @@ html, body {
   flex: 1;
 }
 
+.memo-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.memo-edit-btn {
+  border: 1px solid #e6dff2;
+  background: #faf7ff;
+  color: #6b5e8f;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.memo-edit-btn:hover {
+  background: #efeaff;
+}
+
 .memo-delete {
   border: none;
   background: transparent;
@@ -799,4 +821,78 @@ html, body {
 .toast.show {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
+}
+
+/* 메모 수정 모달 */
+.edit-sheet-card {
+  max-height: 88dvh;
+  overflow-y: auto;
+}
+
+.edit-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.edit-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.edit-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #6d6582;
+}
+
+.edit-select {
+  width: fit-content;
+}
+
+.edit-input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.edit-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 120px;
+  resize: vertical;
+}
+
+.edit-photo-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.edit-actions {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.edit-action-btn {
+  border-radius: 12px;
+  padding: 11px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+.edit-action-btn.cancel {
+  background: #f5f3fa;
+  border-color: #e4dff0;
+  color: #6b647e;
+}
+
+.edit-action-btn.save {
+  background: #e6f2ff;
+  border-color: #c5defa;
+  color: #3a6596;
 }

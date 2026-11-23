@@ -38,6 +38,17 @@ const lightboxClose = document.getElementById("lightboxClose");
 const trashBar = document.getElementById("trashBar");
 const trashCount = document.getElementById("trashCount");
 const btnEmptyTrash = document.getElementById("btnEmptyTrash");
+const editModal = document.getElementById("editModal");
+const btnCloseEditModal = document.getElementById("btnCloseEditModal");
+const editFolderSelect = document.getElementById("editFolderSelect");
+const editTitleInput = document.getElementById("editTitleInput");
+const editBodyInput = document.getElementById("editBodyInput");
+const editUrlInput = document.getElementById("editUrlInput");
+const btnEditAddPhoto = document.getElementById("btnEditAddPhoto");
+const editPhotoPreview = document.getElementById("editPhotoPreview");
+const editFileInput = document.getElementById("editFileInput");
+const btnCancelEdit = document.getElementById("btnCancelEdit");
+const btnSaveEdit = document.getElementById("btnSaveEdit");
 const toastEl = document.getElementById("toast");
 
 function showToast(message) {
@@ -317,7 +328,14 @@ async function renderFeed() {
       <div class="memo-header">
         <span class="folder-badge" data-folder="${escapeHtml(item.folder)}">${escapeHtml(item.folder)}</span>
         <h2 class="memo-title">${highlightText(item.title || "(제목 없음)", q)}</h2>
-        ${isTrashView ? "" : `<button type="button" class="memo-delete" data-id="${item.id}" aria-label="휴지통으로 이동">✕</button>`}
+        ${
+          isTrashView
+            ? ""
+            : `<div class="memo-card-actions">
+                 <button type="button" class="memo-edit-btn" data-id="${item.id}" aria-label="메모 수정">수정</button>
+                 <button type="button" class="memo-delete" data-id="${item.id}" aria-label="휴지통으로 이동">✕</button>
+               </div>`
+        }
       </div>
       ${imagesHtml}
       ${item.body ? `<div class="memo-body">${highlightText(item.body, q)}</div>` : ""}
@@ -527,6 +545,16 @@ btnCloseLink.addEventListener("click", () => {
 });
 
 feedArea.addEventListener("click", async (e) => {
+  const editBtn = e.target.closest(".memo-edit-btn");
+  if (editBtn) {
+    const id = Number(editBtn.dataset.id);
+    const item = cachedMemos.find((m) => m.id === id);
+    if (item) {
+      openEditModal(item);
+    }
+    return;
+  }
+
   const delBtn = e.target.closest(".memo-delete");
   if (delBtn) {
     const id = Number(delBtn.dataset.id);
@@ -605,6 +633,111 @@ lightbox.addEventListener("click", (e) => {
     lightbox.classList.add("hidden");
     lightboxImg.src = "";
   }
+});
+
+let editingMemoId = null;
+let editingImages = [];
+
+function renderEditPhotoPreview() {
+  editPhotoPreview.innerHTML = "";
+  if (editingImages.length === 0) {
+    editPhotoPreview.classList.add("hidden");
+    return;
+  }
+  editPhotoPreview.classList.remove("hidden");
+  editingImages.forEach((src, idx) => {
+    const wrap = document.createElement("div");
+    wrap.className = "pending-thumb";
+    wrap.innerHTML = `
+      <img src="${src}" alt="첨부 이미지 ${idx + 1}" />
+      <button type="button" class="pending-remove" data-idx="${idx}" aria-label="사진 제거">✕</button>
+    `;
+    editPhotoPreview.appendChild(wrap);
+  });
+}
+
+function openEditModal(item) {
+  editingMemoId = item.id;
+  editingImages = Array.isArray(item.images) ? [...item.images] : [];
+  editFolderSelect.value = item.folder || "메모";
+  editTitleInput.value = item.title === "(제목 없음)" ? "" : item.title || "";
+  editBodyInput.value = item.body || "";
+  editUrlInput.value = item.url || "";
+  renderEditPhotoPreview();
+  editModal.classList.remove("hidden");
+}
+
+function closeEditModal() {
+  editModal.classList.add("hidden");
+  editingMemoId = null;
+  editingImages = [];
+  editFileInput.value = "";
+}
+
+btnCloseEditModal.addEventListener("click", closeEditModal);
+btnCancelEdit.addEventListener("click", closeEditModal);
+editModal.addEventListener("click", (e) => {
+  if (e.target === editModal) closeEditModal();
+});
+
+btnEditAddPhoto.addEventListener("click", () => {
+  editFileInput.click();
+});
+
+editFileInput.addEventListener("change", async (e) => {
+  const files = Array.from(e.target.files || []);
+  if (files.length === 0) return;
+  for (const file of files) {
+    try {
+      const compressed = await compressImageFile(file);
+      editingImages.push(compressed);
+    } catch {
+      showToast("일부 이미지를 불러오지 못했어요.");
+    }
+  }
+  editFileInput.value = "";
+  renderEditPhotoPreview();
+});
+
+editPhotoPreview.addEventListener("click", (e) => {
+  const removeBtn = e.target.closest(".pending-remove");
+  if (!removeBtn) return;
+  const idx = Number(removeBtn.dataset.idx);
+  editingImages.splice(idx, 1);
+  renderEditPhotoPreview();
+});
+
+btnSaveEdit.addEventListener("click", async () => {
+  if (editingMemoId == null) return;
+  const item = cachedMemos.find((m) => m.id === editingMemoId);
+  if (!item) {
+    closeEditModal();
+    return;
+  }
+
+  const title = editTitleInput.value.trim();
+  const body = editBodyInput.value.trim();
+  const url = editUrlInput.value.trim();
+
+  if (!title && !body && editingImages.length === 0 && !url) {
+    showToast("내용을 하나 이상 입력해 주세요!");
+    return;
+  }
+
+  const updated = {
+    ...item,
+    folder: editFolderSelect.value || item.folder,
+    title: title || "(제목 없음)",
+    body,
+    url,
+    images: [...editingImages],
+    updatedAt: Date.now(),
+  };
+
+  await updateMemo(updated);
+  closeEditModal();
+  await renderFeed();
+  showToast("메모를 수정했어요!");
 });
 
 btnEmptyTrash.addEventListener("click", async () => {

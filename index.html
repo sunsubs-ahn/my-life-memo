@@ -162,6 +162,52 @@
     </div>
   </div>
 
+  <!-- 메모 수정 모달 -->
+  <div class="sheet-backdrop hidden" id="editModal" role="dialog" aria-modal="true" aria-labelledby="editModalTitle">
+    <div class="sheet-card edit-sheet-card">
+      <div class="sheet-header">
+        <h2 id="editModalTitle" class="sheet-title">메모 수정</h2>
+        <button type="button" id="btnCloseEditModal" class="sheet-close" aria-label="닫기">✕</button>
+      </div>
+      <div class="edit-modal-body">
+        <div class="edit-row">
+          <label class="edit-label" for="editFolderSelect">폴더</label>
+          <select id="editFolderSelect" class="folder-select edit-select">
+            <option value="메모">메모</option>
+            <option value="사진">사진</option>
+            <option value="캡쳐">캡쳐</option>
+            <option value="웹주소">웹주소</option>
+            <option value="기타">기타</option>
+          </select>
+        </div>
+        <div class="edit-row">
+          <label class="edit-label" for="editTitleInput">제목</label>
+          <input type="text" id="editTitleInput" class="title-input edit-input" maxlength="120" placeholder="제목을 입력하세요" />
+        </div>
+        <div class="edit-row">
+          <label class="edit-label" for="editBodyInput">본문</label>
+          <textarea id="editBodyInput" class="body-input edit-textarea" rows="6" placeholder="내용을 입력하세요"></textarea>
+        </div>
+        <div class="edit-row">
+          <label class="edit-label" for="editUrlInput">웹링크 (선택)</label>
+          <input type="url" id="editUrlInput" class="url-input edit-input" placeholder="https://..." />
+        </div>
+        <div class="edit-row">
+          <div class="edit-photo-head">
+            <span class="edit-label">사진 / 캡쳐</span>
+            <button type="button" class="tool-chip" id="btnEditAddPhoto">+ 사진 추가</button>
+          </div>
+          <div class="pending-attachments hidden" id="editPhotoPreview"></div>
+          <input type="file" id="editFileInput" accept="image/*" multiple class="hidden" />
+        </div>
+        <div class="edit-actions">
+          <button type="button" class="edit-action-btn cancel" id="btnCancelEdit">취소</button>
+          <button type="button" class="edit-action-btn save" id="btnSaveEdit">저장</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- 이미지 크게 보기 모달 -->
   <div class="lightbox hidden" id="lightbox" role="dialog" aria-modal="true" aria-label="이미지 크게 보기">
     <button type="button" class="lightbox-close" id="lightboxClose" aria-label="닫기">✕</button>
