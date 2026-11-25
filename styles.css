@@ -829,6 +829,19 @@ html, body {
   overflow-y: auto;
 }
 
+.composer .title-input {
+  height: auto;
+  min-height: 54px;
+  padding: 8px 13px;
+  font-size: 28px;
+  line-height: 1.3;
+}
+
+.composer .body-input {
+  font-size: 28px;
+  line-height: 1.4;
+}
+
 .edit-modal-body {
   display: flex;
   flex-direction: column;
