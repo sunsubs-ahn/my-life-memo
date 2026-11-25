@@ -298,7 +298,7 @@ html, body {
 .folder-badge[data-folder="기타"]   { background: var(--tab-etc-bg); color: var(--tab-etc-text); }
 
 .memo-title {
-  font-size: 14.5px;
+  font-size: 17px;
   font-weight: 700;
   color: var(--text-dark);
   word-break: break-word;
@@ -359,7 +359,7 @@ html, body {
 }
 
 .memo-body {
-  font-size: 13.5px;
+  font-size: 17px;
   line-height: 1.55;
   color: var(--text-body);
   white-space: pre-wrap;
@@ -831,15 +831,15 @@ html, body {
 
 .composer .title-input {
   height: auto;
-  min-height: 46px;
+  min-height: 44px;
   padding: 6px 13px;
-  font-size: 21px;
-  line-height: 1.35;
+  font-size: 17px;
+  line-height: 1.4;
 }
 
 .composer .body-input {
-  font-size: 21px;
-  line-height: 1.45;
+  font-size: 17px;
+  line-height: 1.5;
 }
 
 .edit-modal-body {
